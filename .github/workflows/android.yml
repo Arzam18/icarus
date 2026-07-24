@@ -26,6 +26,10 @@ jobs:
         with:
           targets: aarch64-linux-android
 
+      # Installs the target specifically for the active toolchain in rust-toolchain.toml
+      - name: Ensure Target for Active Toolchain
+        run: rustup target add aarch64-linux-android
+
       - name: Install cargo-ndk
         run: cargo install cargo-ndk
 
@@ -34,11 +38,7 @@ jobs:
           python3 ./download-net.py
 
       - name: Build Icarus for Android
-        env:
-          CARGO_ENCODED_RUSTFLAGS: ""
-          RUSTFLAGS: ""
         run: |
-          # --config 'build.rustflags=[]' overrides -C target-cpu=native from .cargo/config.toml
           cargo ndk -t arm64-v8a --platform 24 build --release -p icarus --config 'build.rustflags=[]'
           
           mkdir -p dist/bin
