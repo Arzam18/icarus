@@ -31,12 +31,15 @@ jobs:
 
       - name: Download NNUE Network
         run: |
-          # build.rs checks for nets/icarus.nnue at compile time
           python3 ./download-net.py
 
       - name: Build Icarus for Android
+        env:
+          CARGO_ENCODED_RUSTFLAGS: ""
+          RUSTFLAGS: ""
         run: |
-          cargo ndk -t arm64-v8a --platform 24 build --release -p icarus
+          # --config 'build.rustflags=[]' overrides -C target-cpu=native from .cargo/config.toml
+          cargo ndk -t arm64-v8a --platform 24 build --release -p icarus --config 'build.rustflags=[]'
           
           mkdir -p dist/bin
           cp target/aarch64-linux-android/release/icarus dist/bin/icarus
