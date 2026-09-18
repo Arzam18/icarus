@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       uci_date:
-        description: "Icarus UCI version/date (example: 20260725)"
+        description: "Icarus UCI version/date (example: 20260918)"
         required: true
-        default: "20260725"
+        default: "20260918"
         type: string
 
 permissions:
@@ -43,8 +43,32 @@ jobs:
         env:
           UCI_DATE: ${{ inputs.uci_date }}
         run: |
-          echo "ICARUS_VERSION=$UCI_DATE" >> "$GITHUB_ENV"
-          echo "Icarus UCI version: $UCI_DATE"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          uci_date = os.environ["UCI_DATE"]
+
+          path = Path("build.rs")
+          text = path.read_text()
+
+          old = 'let version = env::var("CARGO_PKG_VERSION").unwrap();'
+          new = f'let version = "{uci_date}".to_string();'
+
+          if old not in text:
+              raise SystemExit(
+                  "ERROR: Could not find CARGO_PKG_VERSION line in build.rs."
+              )
+
+          text = text.replace(old, new, 1)
+          path.write_text(text)
+
+          print(f"Modified file: {path}")
+          print(f"Icarus UCI version: {uci_date}")
+          PY
+
+          echo "Modified version line:"
+          grep -n 'let version =' build.rs
 
       - name: Build Icarus for Android
         env:
