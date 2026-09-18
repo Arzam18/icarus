@@ -2,10 +2,12 @@ name: Build Android
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "*" ]
-  pull_request:
-    branches: [ "*" ]
+    inputs:
+      uci_date:
+        description: "Icarus UCI version/date (example: 20260918)"
+        required: true
+        default: "20260918"
+        type: string
 
 permissions:
   contents: write
@@ -37,7 +39,16 @@ jobs:
         run: |
           python3 ./download-net.py
 
+      - name: Set Icarus UCI version
+        env:
+          UCI_DATE: ${{ inputs.uci_date }}
+        run: |
+          echo "ICARUS_VERSION=$UCI_DATE" >> "$GITHUB_ENV"
+          echo "Icarus UCI version: $UCI_DATE"
+
       - name: Build Icarus for Android
+        env:
+          ICARUS_RELEASE: "1"
         run: |
           cargo ndk -t arm64-v8a --platform 24 build --release -p icarus --config 'build.rustflags=[]'
           
